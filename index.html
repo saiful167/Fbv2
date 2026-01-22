@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saiful Facebook Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .fb-gradient { background: linear-gradient(135deg, #1877F2, #0052cc); }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <div class="w-full max-w-2xl mt-12 text-center">
+        <i class="fab fa-facebook-square text-6xl text-[#1877F2] mb-4"></i>
+        <h1 class="text-4xl font-black mb-2 tracking-tight">FB <span class="text-[#1877F2]">Downloader</span></h1>
+        <p class="text-gray-400">Download Facebook Videos in HD Quality</p>
+    </div>
+
+    <div class="w-full max-w-2xl mt-10 glass p-8 rounded-3xl shadow-2xl">
+        <input id="fbUrl" type="text" placeholder="Paste Facebook video link here..." 
+            class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-[#1877F2] transition text-sm">
+        <button onclick="downloadFb()" class="w-full mt-4 fb-gradient py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg hover:opacity-90 transition">
+            <i class="fas fa-download mr-2"></i> Get Video Links
+        </button>
+    </div>
+
+    <div id="result" class="hidden w-full max-w-2xl mt-6 glass p-6 rounded-3xl mb-10 animate-pulse">
+        <div id="loading" class="text-center py-10">
+            <i class="fas fa-spinner fa-spin text-4xl text-[#1877F2]"></i>
+            <p class="mt-4 text-gray-400">Processing Facebook Video...</p>
+        </div>
+        <div id="content" class="hidden"></div>
+    </div>
+
+    <div class="w-full max-w-2xl glass p-6 rounded-3xl flex items-center gap-5 border-l-4 border-[#1877F2] mb-10">
+        <div class="h-16 w-16 bg-[#1877F2] rounded-2xl flex items-center justify-center text-2xl font-black">SI</div>
+        <div>
+            <h3 class="text-xl font-bold">Saiful Islam</h3>
+            <p class="text-gray-400 text-sm"><i class="fas fa-envelope mr-1"></i> saifulsajedul@gmail.com</p>
+        </div>
+    </div>
+
+    <script>
+        async function downloadFb() {
+            const url = document.getElementById('fbUrl').value;
+            const resDiv = document.getElementById('result');
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+
+            if(!url) return alert("অনুগ্রহ করে একটি লিঙ্ক দিন!");
+
+            resDiv.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/facebook?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+                resDiv.classList.remove('animate-pulse');
+
+                if(!data.medias) throw new Error("ভিডিও লিঙ্ক পাওয়া যায়নি!");
+
+                let links = '';
+                data.medias.forEach(v => {
+                    links += `
+                        <a href="${v.url}" target="_blank" class="flex justify-between items-center bg-slate-800/80 p-4 rounded-2xl border border-white/5 hover:border-[#1877F2] transition">
+                            <span class="font-bold text-sky-400 uppercase">${v.quality} Quality</span>
+                            <span class="bg-[#1877F2] text-[10px] px-3 py-1 rounded-full font-bold">DOWNLOAD</span>
+                        </a>
+                    `;
+                });
+
+                content.innerHTML = `
+                    <img src="${data.thumbnail}" class="w-full rounded-2xl mb-4 shadow-lg border border-white/10">
+                    <h2 class="text-lg font-bold mb-6 line-clamp-2">${data.title || 'Facebook Video'}</h2>
+                    <div class="flex flex-col gap-3">
+                        ${links}
+                    </div>
+                `;
+            } catch (err) {
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+                content.innerHTML = `<p class="text-red-400 text-center p-4">Error: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
